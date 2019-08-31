@@ -6,7 +6,7 @@ namespace NoteStore.Contract.V1.Request{
         {
         }
 
-         public string Id { get; set; }
+        public string Id { get; set; }
 
         public string Tag{get; set;}
 

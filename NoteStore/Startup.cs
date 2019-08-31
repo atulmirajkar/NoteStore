@@ -32,7 +32,8 @@ namespace NoteStore
             MvcInstaller mvcInstaller = new MvcInstaller();
             mvcInstaller.InstallServices(services,Configuration);
 
-            //todo dbInstaller
+            DbInstaller dbInstaller=new DbInstaller();
+            dbInstaller.InstallServices(services,Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

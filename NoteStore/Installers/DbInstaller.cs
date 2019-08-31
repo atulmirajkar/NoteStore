@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NoteStore.Services;
 
 namespace NoteStore.Installers
 {
@@ -11,7 +12,7 @@ namespace NoteStore.Installers
     {
         public void InstallServices(IServiceCollection services, IConfiguration configuration)
         {
-            throw new NotImplementedException();
+            services.AddSingleton<INoteService,NoteService>();
         }
     }
 }

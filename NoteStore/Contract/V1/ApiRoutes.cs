@@ -16,8 +16,12 @@ namespace NoteStore.Contract.V1
         {
             public const string GetAll = Base + "/notes";
 
-            public const string Get = Base + "/create/get/{noteId}";
-            public const string Create = Base + "/create";
+            public const string Get = Base + "/notes/{noteId}";
+            public const string Create = Base + "/notes";
+
+            public const string Update = Base + "/notes/{noteId}";
+
+            public const string Delete = Base + "/notes/{noteId}";
         }
     }
 }
