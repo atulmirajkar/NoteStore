@@ -37,7 +37,8 @@ namespace NoteStore.Controllers.V1
             if(string.IsNullOrEmpty(noteRequest.Id)){
                 noteRequest.Id=Guid.NewGuid().ToString();
             }
-            this._noteService.GetNotes().Add(note);
+            //this._noteService.GetNotes().Add(note);
+            this._noteService.Create(note);
 
             var baseUrl=HttpContext.Request.Scheme +"://"+ HttpContext.Request.Host.ToUriComponent();
             var locationUri=baseUrl +"/"+ ApiRoutes.Notes.Get.Replace("{noteId}",noteRequest.Id);

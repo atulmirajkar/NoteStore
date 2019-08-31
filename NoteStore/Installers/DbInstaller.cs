@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NoteStore.Services;
+using NoteStore.Options;
+using Microsoft.Extensions.Options;
 
 namespace NoteStore.Installers
 {
@@ -12,7 +14,13 @@ namespace NoteStore.Installers
     {
         public void InstallServices(IServiceCollection services, IConfiguration configuration)
         {
-            services.AddSingleton<INoteService,NoteService>();
+            services.Configure<NoteStoreSetting>(configuration.GetSection(nameof(NoteStoreSetting)));
+            services.AddSingleton<INoteStoreSettings>(sp =>
+            sp.GetRequiredService<IOptions<NoteStoreSetting>>().Value);
+
+
+            //services.AddSingleton<INoteService,NoteService>();
+            services.AddSingleton<INoteService,MongoNoteService>();
         }
     }
 }

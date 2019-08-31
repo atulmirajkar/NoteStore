@@ -10,5 +10,7 @@ namespace NoteStore.Services
          bool UpdateNote(Note noteToUpdate);
 
          bool DeleteNote(string noteID);
+
+         Note Create(Note note);
     }
 }

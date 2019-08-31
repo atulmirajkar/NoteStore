@@ -16,6 +16,12 @@ namespace NoteStore.Services
             _noteList.Add(new Note { Id = Guid.NewGuid().ToString() });
         }
 
+        public Note Create(Note note)
+        {
+            _noteList.Add(note);
+            return note;
+        }
+
         public bool DeleteNote(string noteId)
         {
             var exists = GetNoteById(noteId)!=null;
