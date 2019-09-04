@@ -23,5 +23,13 @@ namespace NoteStore.Contract.V1
 
             public const string Delete = Base + "/notes/{noteId}";
         }
+
+        public static class Identity
+        {
+            public const string Login = Base + "/identity/login";
+
+            public const string Register = Base + "/identity/register";
+
+        }
     }
 }

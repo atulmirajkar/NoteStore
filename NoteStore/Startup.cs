@@ -49,6 +49,8 @@ namespace NoteStore
                 app.UseHsts();
             }
 
+            app.UseAuthentication();
+
             SwaggerOptions swaggerOptions = new SwaggerOptions();
             Configuration.GetSection(nameof(SwaggerOptions)).Bind(swaggerOptions);
             app.UseSwagger(option =>
