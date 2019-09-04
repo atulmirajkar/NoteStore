@@ -2,6 +2,7 @@ using System.Linq;
 using System;
 using System.Collections.Generic;
 using NoteStore.Model;
+using System.Threading.Tasks;
 
 namespace NoteStore.Services
 {
@@ -39,7 +40,7 @@ namespace NoteStore.Services
             return _noteList.SingleOrDefault(x=>x.Id==Id);
         }
 
-        public List<Note> GetNotes()
+        public List<Note> GetNotes(string userId)
         {
             return _noteList;
         }
@@ -54,6 +55,11 @@ namespace NoteStore.Services
             _noteList[index]=noteToUpdate;
 
             return true;
+        }
+
+        public bool UserOwnsNoteAsync(string noteId, string userId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

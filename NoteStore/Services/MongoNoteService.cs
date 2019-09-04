@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using NoteStore.Model;
 using MongoDB.Driver;
 using NoteStore.Options;
+using System.Threading.Tasks;
+using MongoDB.Bson;
 
 namespace NoteStore.Services
 {
@@ -24,6 +26,7 @@ namespace NoteStore.Services
 
         public  Note GetNoteById(string Id)
         {
+            
             var mongoNote= _noteList.Find(note => note.Id==Id ).FirstOrDefault();
             return new Note{
                 Id = mongoNote.Id,
@@ -33,9 +36,11 @@ namespace NoteStore.Services
             };
         }
 
-        public List<Note> GetNotes()
+        public List<Note> GetNotes(string userId)
         {
-           var mongoNoteList= _noteList.Find(note => true).ToList();
+            //todo add where clause for user
+           var filter = Builders<MongoNote>.Filter.Eq("User", userId);
+           var mongoNoteList = _noteList.Find(filter).ToList();
            var noteList = new List<Note>();
            mongoNoteList.ForEach(x => noteList.Add(new Note{
                 Id = x.Id,
@@ -66,6 +71,21 @@ namespace NoteStore.Services
             };
             _noteList.InsertOne(mongoNote);
             return note;
+        }
+
+        public bool UserOwnsNoteAsync(string noteId, string userId)
+        {
+            var mongoNote = _noteList.Find(note => note.Id == noteId).FirstOrDefault();
+            if (mongoNote == null)
+            {
+                return false;
+            }
+
+            if(mongoNote.Id != userId)
+            {
+                return false;
+            }
+            return true;
         }
     }
 }

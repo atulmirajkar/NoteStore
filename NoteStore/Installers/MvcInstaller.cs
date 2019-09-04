@@ -10,6 +10,9 @@ using Swashbuckle.AspNetCore.Swagger;
 using NoteStore.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using NoteStore.Services.V1;
+using NoteStore.Services;
+
 namespace NoteStore.Installers
 {
     public class MvcInstaller : IInstaller
@@ -69,6 +72,9 @@ namespace NoteStore.Installers
                 x.AddSecurityRequirement(security);
 
             });
+
+            //identity service
+            services.AddScoped<IIdentityService, IdentityService>();
         }
     }
 }

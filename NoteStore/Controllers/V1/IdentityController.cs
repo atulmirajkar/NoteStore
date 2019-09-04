@@ -1,5 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using NoteStore.Contract.V1;
+using NoteStore.Contract.V1.Request;
+using NoteStore.Contract.V1.Response;
+using NoteStore.Controllers.V1.Request;
 using NoteStore.Services.V1;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NoteStore.Controllers.V1
 {
@@ -12,6 +18,56 @@ namespace NoteStore.Controllers.V1
             _identityService=identityService;
         }
         
-           
+        [HttpPost(ApiRoutes.Identity.Register)]
+        public async Task<IActionResult> Register([FromBody] UserRegistrationRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                List<string> errors = new List<string>();
+                foreach(var errorEntry in ModelState.Values)
+                {
+                    foreach(var singleError in errorEntry.Errors)
+                    {
+                        errors.Add(singleError.ErrorMessage);
+                    }
+                }
+                return BadRequest(new AuthFailedResponse
+                {
+                    Errors = errors
+                });
+            }
+
+            var authResponse = await _identityService.RegisterAsync(request.Email, request.Password);
+
+            if (!authResponse.Success)
+            {
+                return BadRequest(new AuthFailedResponse
+                {
+                    Errors=authResponse.Errors
+                });
+            }
+            return Ok(new AuthSuccessResponse{
+                Token= authResponse.Token
+            });
+        }
+
+        [HttpPost(ApiRoutes.Identity.Login)]
+        public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
+        {
+            var authResponse = await _identityService.LoginAsync(request.Email, request.Password);
+
+            if (!authResponse.Success)
+            {
+                return BadRequest(new AuthFailedResponse
+                {
+                    Errors = authResponse.Errors
+                });
+            }
+            return Ok(new AuthSuccessResponse
+            {
+                Token = authResponse.Token
+            });
+        }
+
     }
 }

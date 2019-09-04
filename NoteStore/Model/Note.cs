@@ -16,6 +16,8 @@ namespace NoteStore.Model
 
         public string Post{get;set;}
 
+        public User User { get; set; }
+
         //todo add timestamp
     }
 }

@@ -10,9 +10,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using NoteStore.Extensions;
 
 namespace NoteStore.Controllers.V1
 {
+    [Authorize (AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class NoteController : Controller
     {
         private readonly INoteService _noteService;
@@ -24,7 +28,7 @@ namespace NoteStore.Controllers.V1
         [HttpGet(ApiRoutes.Notes.GetAll)]
         public IActionResult GetAll()
         {
-            return Ok(this._noteService.GetNotes());
+            return Ok(this._noteService.GetNotes(HttpContext.GetUserId()));
         }
 
         [HttpPost(ApiRoutes.Notes.Create)]
@@ -32,7 +36,7 @@ namespace NoteStore.Controllers.V1
             if(noteRequest==null)
                 return BadRequest();
 
-            var note = new Note {Id=noteRequest.Id, Tag=noteRequest.Tag, Title=noteRequest.Title, Post=noteRequest.Post};
+            var note = new Note {Id=noteRequest.Id, Tag=noteRequest.Tag, Title=noteRequest.Title, Post=noteRequest.Post, UserId=HttpContext.GetUserId()};
 
             if(string.IsNullOrEmpty(noteRequest.Id)){
                 noteRequest.Id=Guid.NewGuid().ToString();
@@ -59,12 +63,25 @@ namespace NoteStore.Controllers.V1
             return Ok(note);
         }
 
-         [HttpPut(ApiRoutes.Notes.Update)]
+   
+
+        [HttpPut(ApiRoutes.Notes.Update)]
         public IActionResult Update([FromRoute] string noteId, [FromBody] UpdatePostRequest request){
             if(request==null)
                 return BadRequest();
-            
-            var note=new Note{Id=noteId,Tag=request.Tag,Title=request.Title,Post=request.Post};
+            var userOwnsPost = _noteService.UserOwnsNoteAsync(noteId, HttpContext.GetUserId());
+
+            if (!userOwnsPost)
+            {
+                return BadRequest(new { error = "Post not found" });
+            }
+
+
+            //var note=new Note{Id=noteId,Tag=request.Tag,Title=request.Title,Post=request.Post};
+            var note = _noteService.GetNoteById(noteId);
+            note.Tag = request.Tag;
+            note.Title = request.Title;
+            note.Post = request.Post;
 
             var updateSuccess=_noteService.UpdateNote(note);
             
@@ -79,6 +96,14 @@ namespace NoteStore.Controllers.V1
         public IActionResult Delete([FromRoute] string noteId){
             if(string.IsNullOrEmpty(noteId))
                 return BadRequest();
+
+            var userOwnsPost = _noteService.UserOwnsNoteAsync(noteId, HttpContext.GetUserId());
+
+            if (!userOwnsPost)
+            {
+                return BadRequest(new { error = "Post not found" });
+            }
+
 
             var deleteSuccess=_noteService.DeleteNote(noteId);
             if(!deleteSuccess)
