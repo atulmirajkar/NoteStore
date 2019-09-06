@@ -7,5 +7,6 @@ namespace NoteStore.Options
         public string DatabaseName{get;set;}
 
         public string CollectionName{get;set;}
+        public string RefreshTokenCollectionName { get; set; }
     }
 }

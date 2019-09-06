@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using NoteStore.Options;
 using System.Threading.Tasks;
 using MongoDB.Bson;
+using System;
 
 namespace NoteStore.Services
 {
@@ -28,25 +29,29 @@ namespace NoteStore.Services
         {
             
             var mongoNote= _noteList.Find(note => note.Id==Id ).FirstOrDefault();
+            if (mongoNote == null)
+                return null;
             return new Note{
                 Id = mongoNote.Id,
                 Title=mongoNote.Title,
                 Tag=mongoNote.Tag,
-                Post=mongoNote.Post
+                Post=mongoNote.Post,
+                UserId=mongoNote.UserId
             };
         }
 
-        public List<Note> GetNotes(string userId)
+        public List<Note> GetNotes(Guid userId)
         {
             //todo add where clause for user
-           var filter = Builders<MongoNote>.Filter.Eq("User", userId);
+           var filter = Builders<MongoNote>.Filter.Eq("UserId", userId);
            var mongoNoteList = _noteList.Find(filter).ToList();
            var noteList = new List<Note>();
            mongoNoteList.ForEach(x => noteList.Add(new Note{
                 Id = x.Id,
                 Title=x.Title,
                 Tag=x.Tag,
-                Post=x.Post
+                Post=x.Post,
+                UserId=x.UserId
            }));
            return noteList;
         }
@@ -54,9 +59,11 @@ namespace NoteStore.Services
         public bool UpdateNote(Note noteToUpdate)
         {
             var mongoNote = new MongoNote{
+                Id=noteToUpdate.Id,
                 Title=noteToUpdate.Title,
                 Tag=noteToUpdate.Tag,
-                Post=noteToUpdate.Post
+                Post=noteToUpdate.Post,
+                UserId=noteToUpdate.UserId
             };
             _noteList.ReplaceOne(note => note.Id == mongoNote.Id,mongoNote);
             return true;
@@ -67,13 +74,14 @@ namespace NoteStore.Services
                  Id = note.Id,
                 Title=note.Title,
                 Tag=note.Tag,
-                Post=note.Post
+                Post=note.Post,
+                UserId=note.UserId
             };
             _noteList.InsertOne(mongoNote);
             return note;
         }
 
-        public bool UserOwnsNoteAsync(string noteId, string userId)
+        public bool UserOwnsNoteAsync(string noteId, Guid userId)
         {
             var mongoNote = _noteList.Find(note => note.Id == noteId).FirstOrDefault();
             if (mongoNote == null)
@@ -81,7 +89,7 @@ namespace NoteStore.Services
                 return false;
             }
 
-            if(mongoNote.Id != userId)
+            if(mongoNote.UserId != userId)
             {
                 return false;
             }

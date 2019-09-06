@@ -8,6 +8,8 @@ namespace NoteStore.Contract.V1.Request
     public class AuthSuccessResponse
     {
         public string Token { get; set; }
+
+        public string RefreshToken { get; set; }
     }
 }
  

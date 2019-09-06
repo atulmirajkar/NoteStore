@@ -7,7 +7,8 @@ namespace NoteStore.Model
 {
     public class Note
     {
-        public string UserId{get; set;}
+        public Guid UserId{get; set;}
+
         public string Id { get; set; }
 
         public string Tag{get; set;}
@@ -15,8 +16,6 @@ namespace NoteStore.Model
         public string Title{get;set;}
 
         public string Post{get;set;}
-
-        public User User { get; set; }
 
         //todo add timestamp
     }

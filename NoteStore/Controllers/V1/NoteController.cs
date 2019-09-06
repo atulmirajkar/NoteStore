@@ -79,6 +79,8 @@ namespace NoteStore.Controllers.V1
 
             //var note=new Note{Id=noteId,Tag=request.Tag,Title=request.Title,Post=request.Post};
             var note = _noteService.GetNoteById(noteId);
+            if (note == null)
+                return NotFound();
             note.Tag = request.Tag;
             note.Title = request.Title;
             note.Post = request.Post;

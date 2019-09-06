@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NoteStore.Model;
@@ -5,7 +6,7 @@ namespace NoteStore.Services
 {
     public interface INoteService
     {
-         List<Note> GetNotes(string userId);
+         List<Note> GetNotes(Guid userId);
          Note GetNoteById(string Id);
 
          bool UpdateNote(Note noteToUpdate);
@@ -13,6 +14,6 @@ namespace NoteStore.Services
          bool DeleteNote(string noteID);
 
          Note Create(Note note);
-         bool UserOwnsNoteAsync(string noteId, string userId);
+         bool UserOwnsNoteAsync(string noteId, Guid userId);
     }
 }

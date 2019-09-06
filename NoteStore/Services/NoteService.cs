@@ -40,7 +40,7 @@ namespace NoteStore.Services
             return _noteList.SingleOrDefault(x=>x.Id==Id);
         }
 
-        public List<Note> GetNotes(string userId)
+        public List<Note> GetNotes(Guid userId)
         {
             return _noteList;
         }
@@ -57,7 +57,7 @@ namespace NoteStore.Services
             return true;
         }
 
-        public bool UserOwnsNoteAsync(string noteId, string userId)
+        public bool UserOwnsNoteAsync(string noteId, Guid userId)
         {
             throw new NotImplementedException();
         }

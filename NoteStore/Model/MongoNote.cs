@@ -1,11 +1,14 @@
 using MongoDB.Bson.Serialization.Attributes;
+using System;
+
 namespace NoteStore.Model
 {
     public class MongoNote
     {
+      
+        public Guid UserId{get; set;}
+
         [BsonId]
-        [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
-        public string UserId{get; set;}
         public string Id { get; set; }
 
         public string Tag{get; set;}

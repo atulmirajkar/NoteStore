@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using NoteStore.Model;
 using NoteStore.Options;
 using NoteStore.Services.V1;
@@ -18,11 +19,19 @@ namespace NoteStore.Services
         public static readonly string constID = "id";
         private readonly UserManager<User> _userManager;
         private readonly JwtSettings _jwtSettings;
+        private readonly TokenValidationParameters _tokenValidationParameters;
+        private IMongoCollection<RefreshToken> _refreshTokenList;
 
-        public IdentityService(UserManager<User> userManager, JwtSettings jwtSettings)
+        public IdentityService(UserManager<User> userManager, JwtSettings jwtSettings, TokenValidationParameters tokenValidationParameters, INoteStoreSettings noteStoreSettings)
         {
             _userManager = userManager;
             _jwtSettings = jwtSettings;
+            _tokenValidationParameters = tokenValidationParameters;
+
+            //refresh token list
+            var client = new MongoClient(noteStoreSettings.ConnectionString);
+            var database = client.GetDatabase(noteStoreSettings.DatabaseName);
+            _refreshTokenList = database.GetCollection<RefreshToken>(noteStoreSettings.RefreshTokenCollectionName);
         }
 
         public async Task<AuthenticationResult> LoginAsync(string email, string password)
@@ -47,6 +56,78 @@ namespace NoteStore.Services
             }
 
             return GenerateAuthResultForUser(user);
+        }
+
+        public async Task<AuthenticationResult> RefreshTokenAsync(string token, string refreshToken)
+        {
+            var validatedToken = GetPrincipalFromToken(token);
+            if (validatedToken==null)
+            {
+                return new AuthenticationResult { Errors = new[] { "Invalid token" } };
+            }
+
+            var expiryDateUnix = long.Parse(validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+
+            var expiryDateTimeUtc = new DateTime(1970, 1, 1).AddSeconds(expiryDateUnix);
+
+            if(expiryDateTimeUtc> DateTime.UtcNow)
+            {
+                return new AuthenticationResult { Errors = new[] { "This token hasn't expired yet" } };
+            }
+
+            var jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+
+            var storedRefreshToken = _refreshTokenList.Find(x => x.Token == refreshToken).FirstOrDefault();
+
+            if (storedRefreshToken == null)
+            {
+                return new AuthenticationResult { Errors = new[] { "This refresh token does not exist." }};
+            }
+
+            if (DateTime.UtcNow > storedRefreshToken.ExpiryDate)
+            {
+                return new AuthenticationResult { Errors = new[] { "This refresh token has expired." }};
+            }
+
+            if (storedRefreshToken.Invalidated)
+            {
+                return new AuthenticationResult { Errors = new[] { "This refresh token has been invalidated." } };
+            }
+
+            if (storedRefreshToken.JwtId != jti)
+            {
+                return new AuthenticationResult { Errors = new[] { "This refresh token does not match this JWT." } };
+            }
+
+            storedRefreshToken.Used = true;
+            _refreshTokenList.ReplaceOne(x => x.JwtId == storedRefreshToken.JwtId, storedRefreshToken);
+
+            var user = await _userManager.FindByIdAsync(validatedToken.Claims.Single(x => x.Type == "id").Value);
+            return GenerateAuthResultForUser(user);
+        }
+
+        private ClaimsPrincipal GetPrincipalFromToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, _tokenValidationParameters, out var validatedToken);
+                if(!IsJwtWithValidSecurityAlgorithm(validatedToken))
+                {
+                    return null;
+                }
+                return principal;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private bool IsJwtWithValidSecurityAlgorithm(SecurityToken validatedToken)
+        {
+            return (validatedToken is JwtSecurityToken jwtSecurityToken) && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
         }
 
         public async Task<AuthenticationResult> RegisterAsync(string email, string password)
@@ -80,7 +161,7 @@ namespace NoteStore.Services
      
         }
 
-        AuthenticationResult GenerateAuthResultForUser(User user)
+        private AuthenticationResult GenerateAuthResultForUser(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
@@ -92,16 +173,29 @@ namespace NoteStore.Services
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(constID,user.Id.ToString())
                 }),
-                Expires = DateTime.UtcNow.AddHours(2),
+                Expires = DateTime.UtcNow.AddSeconds(_jwtSettings.TokenLifeTime.TotalSeconds),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
 
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            var refreshToken = new RefreshToken
+            {
+                Token = Guid.NewGuid().ToString(),
+                JwtId = token.Id,
+                UserId = user.Id,
+                CreationDate = DateTime.UtcNow,
+                ExpiryDate = DateTime.UtcNow.AddMonths(6)
+            };
+
+            _refreshTokenList.InsertOne(refreshToken);
+
             return new AuthenticationResult
             {
                 Success = true,
-                Token = tokenHandler.WriteToken(token)
+                Token = tokenHandler.WriteToken(token),
+                RefreshToken = refreshToken.Token
             };
         }
     }
