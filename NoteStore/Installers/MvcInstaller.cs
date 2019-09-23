@@ -78,6 +78,14 @@ namespace NoteStore.Installers
 
             //identity service
             services.AddScoped<IIdentityService, IdentityService>();
+
+            //add cors
+            services.AddCors(x => x.AddPolicy("MyPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            }));
         }
     }
 }

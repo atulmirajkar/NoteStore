@@ -63,6 +63,8 @@ namespace NoteStore
                 option.SwaggerEndpoint(swaggerOptions.UiEndpoint,swaggerOptions.Description);
             });
 
+            app.UseCors("MyPolicy");
+
             app.UseHttpsRedirection();
             app.UseMvc();
         }

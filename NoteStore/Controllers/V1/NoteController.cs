@@ -28,7 +28,15 @@ namespace NoteStore.Controllers.V1
         [HttpGet(ApiRoutes.Notes.GetAll)]
         public IActionResult GetAll()
         {
-            return Ok(this._noteService.GetNotes(HttpContext.GetUserId()));
+            var responseNoteList = new List<NoteResponse>();
+            var mongoNoteList = this._noteService.GetNotes(HttpContext.GetUserId());
+            mongoNoteList.ForEach(x => responseNoteList.Add(new NoteResponse{
+                Id = x.Id,
+                Title=x.Title,
+                Tag=x.Tag,
+                Post=x.Post,
+           }));
+            return Ok(responseNoteList);
         }
 
         [HttpPost(ApiRoutes.Notes.Create)]
@@ -36,18 +44,18 @@ namespace NoteStore.Controllers.V1
             if(noteRequest==null)
                 return BadRequest();
 
-            var note = new Note {Id=noteRequest.Id, Tag=noteRequest.Tag, Title=noteRequest.Title, Post=noteRequest.Post, UserId=HttpContext.GetUserId()};
-
             if(string.IsNullOrEmpty(noteRequest.Id)){
                 noteRequest.Id=Guid.NewGuid().ToString();
             }
-            //this._noteService.GetNotes().Add(note);
+
+            var note = new Note {Id=noteRequest.Id, Tag=noteRequest.Tag, Title=noteRequest.Title, Post=noteRequest.Post, UserId=HttpContext.GetUserId()};
+
             this._noteService.Create(note);
 
             var baseUrl=HttpContext.Request.Scheme +"://"+ HttpContext.Request.Host.ToUriComponent();
             var locationUri=baseUrl +"/"+ ApiRoutes.Notes.Get.Replace("{noteId}",noteRequest.Id);
 
-            var response=new CreateNoteResponse{Id=note.Id, Tag=note.Tag, Title=note.Title, Post=note.Post};
+            var response=new NoteResponse{Id=note.Id, Tag=note.Tag, Title=note.Title, Post=note.Post};
 
             return Created(locationUri,response);
         }
@@ -60,7 +68,7 @@ namespace NoteStore.Controllers.V1
             {
                 return NotFound();
             }
-            return Ok(note);
+            return Ok(new NoteResponse{Id=note.Id, Tag=note.Tag, Title=note.Title, Post=note.Post});
         }
 
    

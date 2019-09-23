@@ -1,6 +1,6 @@
 namespace NoteStore.Contract.V1.Response
 {
-    public class CreateNoteResponse
+    public class NoteResponse
     {
         public string Id { get; set; }
 
