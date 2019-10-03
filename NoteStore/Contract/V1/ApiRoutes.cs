@@ -32,6 +32,8 @@ namespace NoteStore.Contract.V1
 
             public const string Refresh = Base + "/identity/refresh";
 
+            public const string Logout = Base + "/identity/logout";
+
         }
     }
 }

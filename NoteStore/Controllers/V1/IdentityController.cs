@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NoteStore.Contract.V1;
 using NoteStore.Contract.V1.Request;
@@ -89,6 +91,13 @@ namespace NoteStore.Controllers.V1
                 Token = authResponse.Token,
                 RefreshToken = authResponse.RefreshToken
             });
+        }
+
+        [Authorize (AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost(ApiRoutes.Identity.Logout)]
+        public async Task<IActionResult> Logout([FromBody] LogoutRequest request){
+            await _identityService.LogoutAsync(request.Token);
+            return Ok();
         }
     }
 }

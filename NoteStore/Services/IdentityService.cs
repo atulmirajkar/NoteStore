@@ -58,9 +58,10 @@ namespace NoteStore.Services
             return GenerateAuthResultForUser(user);
         }
 
+
         public async Task<AuthenticationResult> RefreshTokenAsync(string token, string refreshToken)
         {
-            var validatedToken = GetPrincipalFromToken(token);
+            var validatedToken = GetPrincipalFromExpiredToken(token);
             if (validatedToken==null)
             {
                 return new AuthenticationResult { Errors = new[] { "Invalid token" } };
@@ -113,7 +114,35 @@ namespace NoteStore.Services
             try
             {
                 var principal = tokenHandler.ValidateToken(token, _tokenValidationParameters, out var validatedToken);
-                if(!IsJwtWithValidSecurityAlgorithm(validatedToken))
+                if (!IsJwtWithValidSecurityAlgorithm(validatedToken))
+                {
+                    return null;
+                }
+                return principal;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(this._jwtSettings.Secret)),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                RequireExpirationTime = false,
+                ValidateLifetime = false,
+                ClockSkew = TimeSpan.Zero
+            };
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var validatedToken);
+                if (!IsJwtWithValidSecurityAlgorithm(validatedToken))
                 {
                     return null;
                 }
@@ -133,7 +162,7 @@ namespace NoteStore.Services
         public async Task<AuthenticationResult> RegisterAsync(string email, string password)
         {
             var existingUser = await _userManager.FindByEmailAsync(email);
-            if(existingUser != null)
+            if (existingUser != null)
             {
                 return new AuthenticationResult
                 {
@@ -158,7 +187,7 @@ namespace NoteStore.Services
                 };
             }
             return GenerateAuthResultForUser(newUser);
-     
+
         }
 
         private AuthenticationResult GenerateAuthResultForUser(User user)
@@ -186,7 +215,8 @@ namespace NoteStore.Services
                 JwtId = token.Id,
                 UserId = user.Id,
                 CreationDate = DateTime.UtcNow,
-                ExpiryDate = DateTime.UtcNow.AddMonths(6)
+                //ExpiryDate = DateTime.UtcNow.AddMonths(6)
+                ExpiryDate = DateTime.UtcNow.AddSeconds(_jwtSettings.RefreshTokenLifeTime.TotalSeconds)
             };
 
             _refreshTokenList.InsertOne(refreshToken);
@@ -198,6 +228,19 @@ namespace NoteStore.Services
                 RefreshToken = refreshToken.Token
             };
         }
+
+        public async Task LogoutAsync(string token)
+        {
+            var validatedToken = GetPrincipalFromToken(token);
+            if (validatedToken == null)
+                return;
+
+            var user = await _userManager.FindByIdAsync(validatedToken.Claims.Single(x => x.Type == "id").Value);
+
+
+            //delete refreshToken
+            await _refreshTokenList.DeleteManyAsync(refreshToken => refreshToken.UserId == user.Id);
+        }
     }
-  
+
 }

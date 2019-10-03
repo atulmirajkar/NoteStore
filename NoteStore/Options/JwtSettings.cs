@@ -6,5 +6,7 @@ namespace NoteStore.Options
     {
         public string Secret{get;set;}
         public TimeSpan TokenLifeTime { get; set; }
+
+        public TimeSpan RefreshTokenLifeTime {get; set;}
     }
 }
