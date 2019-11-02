@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -30,10 +31,10 @@ namespace NoteStore
         public void ConfigureServices(IServiceCollection services)
         {
             MvcInstaller mvcInstaller = new MvcInstaller();
-            mvcInstaller.InstallServices(services,Configuration);
+            mvcInstaller.InstallServices(services, Configuration);
 
-            DbInstaller dbInstaller=new DbInstaller();
-            dbInstaller.InstallServices(services,Configuration);
+            DbInstaller dbInstaller = new DbInstaller();
+            dbInstaller.InstallServices(services, Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,6 +50,11 @@ namespace NoteStore
                 app.UseHsts();
             }
 
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+
             app.UseAuthentication();
 
             SwaggerOptions swaggerOptions = new SwaggerOptions();
@@ -60,7 +66,7 @@ namespace NoteStore
             });
             app.UseSwaggerUI(option =>
             {
-                option.SwaggerEndpoint(swaggerOptions.UiEndpoint,swaggerOptions.Description);
+                option.SwaggerEndpoint(swaggerOptions.UiEndpoint, swaggerOptions.Description);
             });
 
             app.UseCors("MyPolicy");
