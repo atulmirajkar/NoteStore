@@ -83,7 +83,14 @@ namespace NoteStore.Installers
             //add cors
             services.AddCors(x => x.AddPolicy("MyPolicy", builder =>
             {
-                builder.AllowAnyOrigin()
+                builder.WithOrigins("http://notes.atulmirajkar.com",
+                                    "https://notes.atulmirajkar.com",
+                                    "http://www.notes.atulmirajkar.com",
+                                    "https://notes.atulmirajkar.com",
+                                    "http://notesapi.atulmirajkar.com",
+                                    "https://notesapi.atulmirajkar.com",
+                                    "http://www.notesapi.atulmirajkar.com",
+                                    "https://notesapi.atulmirajkar.com")
                     .AllowAnyMethod()
                     .AllowAnyHeader();
             }));
