@@ -16,10 +16,7 @@ namespace NoteStore.Installers
     {
         public void InstallServices(IServiceCollection services, IConfiguration configuration)
         {
-            // services.Configure<NoteStoreSetting>(configuration.GetSection(nameof(NoteStoreSetting)));
-            // services.AddSingleton<INoteStoreSettings>(sp =>
-            // sp.GetRequiredService<IOptions<NoteStoreSetting>>().Value);
-         
+     
             //mongo
             var noteStoreSetting = configuration.GetSection(nameof(NoteStoreSetting)).Get<NoteStoreSetting>();
             services.AddSingleton<INoteStoreSettings>(noteStoreSetting);

@@ -79,18 +79,13 @@ namespace NoteStore.Installers
 
             //identity service
             services.AddScoped<IIdentityService, IdentityService>();
+            //origin URLS
+            var originURLSettings = configuration.GetSection("OriginNames").Get<string[]>();
 
             //add cors
             services.AddCors(x => x.AddPolicy("MyPolicy", builder =>
             {
-                builder.WithOrigins("http://notes.atulmirajkar.com",
-                                    "https://notes.atulmirajkar.com",
-                                    "http://www.notes.atulmirajkar.com",
-                                    "https://notes.atulmirajkar.com",
-                                    "http://notesapi.atulmirajkar.com",
-                                    "https://notesapi.atulmirajkar.com",
-                                    "http://www.notesapi.atulmirajkar.com",
-                                    "https://notesapi.atulmirajkar.com")
+                builder.WithOrigins(originURLSettings)
                     .AllowAnyMethod()
                     .AllowAnyHeader();
             }));
