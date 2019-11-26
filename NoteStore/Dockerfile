@@ -22,5 +22,5 @@ WORKDIR /app
 COPY --from=build-env /app/out .
 ENTRYPOINT ["dotnet", "NoteStore.dll"]
 
-#docker build -t atulmirajkar/notestoredotnetcore2.2:v1
+#docker build -t atulmirajkar/notestoredotnetcore2.2:v1 .
 #docker push atulmirajkar/notestoredotnetcore2.2:v1
