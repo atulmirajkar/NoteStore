@@ -26,7 +26,6 @@ namespace NoteStore.Installers
             .AddMongoDbStores<User,Role,Guid>(noteStoreSetting.ConnectionString,noteStoreSetting.DatabaseName);
 
             //note service
-            //services.AddSingleton<INoteService,NoteService>();
             services.AddSingleton<INoteService,MongoNoteService>();
 
         }
