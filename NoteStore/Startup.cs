@@ -71,7 +71,10 @@ namespace NoteStore
 
             app.UseCors("MyPolicy");
 
-            app.UseHttpsRedirection();
+            if(!env.IsDevelopment()){
+                app.UseHttpsRedirection();
+            }
+            
             app.UseMvc();
         }
     }
