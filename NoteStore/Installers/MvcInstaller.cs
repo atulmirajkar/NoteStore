@@ -24,9 +24,6 @@ namespace NoteStore.Installers
         public void InstallServices(IServiceCollection services, IConfiguration configuration)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-
-           
-
             //JWT
             var jwtSetting = new JwtSettings();
             configuration.Bind(nameof(JwtSettings),jwtSetting);
@@ -79,6 +76,7 @@ namespace NoteStore.Installers
 
             //identity service
             services.AddScoped<IIdentityService, IdentityService>();
+            
             //origin URLS
             var originURLSettings = configuration.GetSection("OriginNames").Get<string[]>();
 
@@ -87,7 +85,8 @@ namespace NoteStore.Installers
             {
                 builder.WithOrigins(originURLSettings)
                     .AllowAnyMethod()
-                    .AllowAnyHeader();
+                    .AllowAnyHeader()
+                    .SetPreflightMaxAge(TimeSpan.FromSeconds(86400));
             }));
         }
     }
