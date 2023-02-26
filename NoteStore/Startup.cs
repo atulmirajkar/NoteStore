@@ -30,6 +30,9 @@ namespace NoteStore
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // https://stackoverflow.com/questions/57684093/using-usemvc-to-configure-mvc-is-not-supported-while-using-endpoint-routing
+            services.AddMvc(options => options.EnableEndpointRouting = false);
+
             MvcInstaller mvcInstaller = new MvcInstaller();
             mvcInstaller.InstallServices(services, Configuration);
 

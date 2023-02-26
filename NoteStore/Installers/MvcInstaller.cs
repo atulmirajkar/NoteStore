@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using NoteStore.Services.V1;
 using NoteStore.Services;
+using Swashbuckle.Swagger;
+using Microsoft.OpenApi.Models;
 
 namespace NoteStore.Installers
 {
@@ -26,7 +28,7 @@ namespace NoteStore.Installers
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             //JWT
             var jwtSetting = new JwtSettings();
-            configuration.Bind(nameof(JwtSettings),jwtSetting);
+            configuration.Bind(nameof(JwtSettings), jwtSetting);
             services.AddSingleton(jwtSetting);
             var tokenValidationParameters = new TokenValidationParameters
             {
@@ -43,40 +45,54 @@ namespace NoteStore.Installers
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultScheme=JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme=JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 
-            }).AddJwtBearer(x => {
-                x.SaveToken=true;
+            }).AddJwtBearer(x =>
+            {
+                x.SaveToken = true;
                 x.TokenValidationParameters = tokenValidationParameters;
             });
 
             //swagger
             services.AddSwaggerGen(x =>
             {
-                var swaggerInfo = new Info();
+                var swaggerInfo = new OpenApiInfo();
                 swaggerInfo.Description = "Note Store API";
                 swaggerInfo.Version = "v1";
                 x.SwaggerDoc("v1", swaggerInfo);
 
-                var security = new Dictionary<string,IEnumerable<string>>{
-                    {"Bearer", new string[0]}
-                };
 
-                var apiScheme = new ApiKeyScheme();              
-                apiScheme.Description="JWT authorization header using bearer scheme";
-                apiScheme.Name="authorization";
-                apiScheme.In = "header";
-                apiScheme.Type="apiKey";
-                
-                x.AddSecurityDefinition("Bearer", apiScheme);
-                x.AddSecurityRequirement(security);
+                var apiScheme = new OpenApiSecurityScheme();
+                apiScheme.Description = "JWT authorization header using bearer scheme";
+                apiScheme.Name = "authorization";
+                apiScheme.In = ParameterLocation.Header;
+                apiScheme.Type = SecuritySchemeType.ApiKey;
 
+                x.AddSecurityDefinition(name: "Bearer", apiScheme);
+
+
+                x.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Name = "Bearer",
+                            In = ParameterLocation.Header,
+                            Reference = new OpenApiReference
+                            {
+                                Id = "Bearer",
+                                Type = ReferenceType.SecurityScheme
+                            }
+                        },
+                        new List<string>()
+                    }
+                });
             });
 
             //identity service
             services.AddScoped<IIdentityService, IdentityService>();
-            
+
             //origin URLS
             var originURLSettings = configuration.GetSection("OriginNames").Get<string[]>();
 
